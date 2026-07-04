@@ -1,4 +1,4 @@
-# cloud-itonami-9000
+# cloud-itonami-isic-9000
 
 Open Business Blueprint for **ISIC Rev.5 9000**: Creative, arts and entertainment activities.
 

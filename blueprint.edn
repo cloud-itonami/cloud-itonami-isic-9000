@@ -1,4 +1,4 @@
-{:itonami.blueprint/id "cloud-itonami-9000"
+{:itonami.blueprint/id "cloud-itonami-isic-9000"
  :itonami.blueprint/name "Creative, arts and entertainment activities"
  :itonami.blueprint/isic-rev5 "9000"
  :itonami.blueprint/domain :recreation/creative-arts

@@ -1,6 +1,6 @@
 # Governance
 
-`cloud-itonami-9000` is an OSS open-business blueprint for creative, arts and entertainment activities -- live performance, theatrical production and other creative arts presentation.
+`cloud-itonami-isic-9000` is an OSS open-business blueprint for creative, arts and entertainment activities -- live performance, theatrical production and other creative arts presentation.
 Governance covers both the capability layer and the operator model.
 
 ## Maintainers

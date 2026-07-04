@@ -2,7 +2,7 @@
 
 ## Classification
 
-- Repository: `cloud-itonami-9000`
+- Repository: `cloud-itonami-isic-9000`
 - ISIC Rev.5: `9000`
 - Activity: creative, arts and entertainment activities -- live performance, theatrical production and other creative arts presentation
 - Social impact: cultural/recreational access, data sovereignty, transparent audit
