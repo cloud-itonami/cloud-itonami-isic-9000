@@ -30,8 +30,15 @@
 
 ## Trust Controls
 
-- no production is released/published to the public without human sign-off
-- a rights/licensing conflict forces a hold, not an override
-- every release path is auditable
+- no production is released/published to the public without human
+  sign-off (a rights-holder/producer)
+- a fabricated jurisdiction citation, incomplete rights-clearance
+  evidence, a release channel that appears on the production's own
+  restricted-channel list, or an unresolved rights-clearance flag --
+  each forces a hold, not an override
+- a production cannot be released twice: a double-release attempt is
+  held off this actor's own production facts alone, with no upstream
+  comparison needed
+- every intake, assessment, screening and release path is auditable
 - performer/artist personal data stays outside Git
 - emergency manual override paths remain outside LLM control
