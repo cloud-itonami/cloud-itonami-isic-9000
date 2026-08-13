@@ -14,6 +14,15 @@
          {:local/root "../../kotoba-lang/langchain"}}}
   ;; clojure -M:dev:run  -> drive the demo through one OperationActor
   :run {:main-opts ["-m" "entertainment.sim"]}
+  ;; clojure -M:render-html [out-file] -> regenerate docs/samples/operator-console.html
+  ;; by driving the REAL actor (flagship checklist item 2). jp-go-dds is an
+  ;; alias-scoped extra dep on purpose: the design system is only needed to
+  ;; render the page, so :test / :lint keep their existing dependency surface.
+  :render-html {:extra-deps
+                {io.github.kotoba-lang/jp-go-digital-design-system
+                 {:git/url "https://github.com/kotoba-lang/jp-go-digital-design-system"
+                  :git/sha "83db99546eabc53613ae826ea41d1533a3c574af"}}
+                :main-opts ["-m" "entertainment.render-html"]}
   :test {:extra-paths ["test"]
          :extra-deps {io.github.cognitect-labs/test-runner
                       {:git/tag "v0.5.1" :git/sha "dfb30dd"}}
