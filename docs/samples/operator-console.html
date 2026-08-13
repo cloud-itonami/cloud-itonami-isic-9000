@@ -2499,11 +2499,11 @@ img,svg { max-width: 100%; height: auto; }</style></head><body>
     <table>
       <thead><tr><th>Rule</th><th>Op</th><th>Production</th><th>Detail</th><th>Advisor confidence</th></tr></thead>
       <tbody>
-        <tr><td><code>no-spec-basis</code></td><td><code>assess</code></td><td>production-2</td><td>公式spec-basisの引用が無い提案は法域要件として扱えない</td><td class="num">0.9</td></tr>
-        <tr><td><code>evidence-incomplete</code></td><td><code>release</code></td><td>production-2</td><td>法域の必要書類(権利処理記録/利用許諾契約書/レイティング記録等)が充足していない状態での公開提案</td><td class="num">0.9</td></tr>
-        <tr><td><code>release-channel-restricted</code></td><td><code>release</code></td><td>production-3</td><td>production-3 の提案公開経路(:streaming)が制限経路リスト#{:streaming}に含まれている</td><td class="num">0.3</td></tr>
-        <tr><td><code>rights-clearance-unresolved</code></td><td><code>screen</code></td><td>production-4</td><td>未解決の権利処理フラグが残っている作品に対する公開提案は進められない</td><td class="num">0.95</td></tr>
-        <tr><td><code>already-released</code></td><td><code>release</code></td><td>production-1</td><td>production-1 は既に公開済み</td><td class="num">0.9</td></tr>
+        <tr><td><code>no-spec-basis</code></td><td><code>jurisdiction/assess</code></td><td>production-2</td><td>公式spec-basisの引用が無い提案は法域要件として扱えない</td><td class="num">0.9</td></tr>
+        <tr><td><code>evidence-incomplete</code></td><td><code>production/release</code></td><td>production-2</td><td>法域の必要書類(権利処理記録/利用許諾契約書/レイティング記録等)が充足していない状態での公開提案</td><td class="num">0.9</td></tr>
+        <tr><td><code>release-channel-restricted</code></td><td><code>production/release</code></td><td>production-3</td><td>production-3 の提案公開経路(:streaming)が制限経路リスト#{:streaming}に含まれている</td><td class="num">0.3</td></tr>
+        <tr><td><code>rights-clearance-unresolved</code></td><td><code>rights/screen</code></td><td>production-4</td><td>未解決の権利処理フラグが残っている作品に対する公開提案は進められない</td><td class="num">0.95</td></tr>
+        <tr><td><code>already-released</code></td><td><code>production/release</code></td><td>production-1</td><td>production-1 は既に公開済み</td><td class="num">0.9</td></tr>
       </tbody>
     </table>
   </section>
@@ -2513,13 +2513,13 @@ img,svg { max-width: 100%; height: auto; }</style></head><body>
     <table>
       <thead><tr><th>Op</th><th>Production</th><th>Phase</th><th>Phase reason</th><th>Governor violations</th></tr></thead>
       <tbody>
-        <tr><td><code>assess</code></td><td>production-1</td><td class="num">1</td><td><code>phase-disabled</code></td><td><span class="muted">0</span></td></tr>
+        <tr><td><code>jurisdiction/assess</code></td><td>production-1</td><td class="num">1</td><td><code>phase-disabled</code></td><td><span class="muted">0</span></td></tr>
       </tbody>
     </table>
   </section>
   <section class="card">
     <h2>Approver attribution on committed registers</h2>
-    <p class="muted">Measured at render time by scanning each committed register for an approver key — not assumed, and not joined from the ledger on <code>[op, subject]</code> (that pairing is not unique and would let a record inherit an earlier approval). Rows appear only for registers this run actually committed. Where the store does not retain the approver, the approving human is still recoverable from the append-only ledger below, but is <em>not</em> on the record itself.</p>
+    <p class="muted">Measured at render time by scanning each committed register for an approver key — not assumed, and not joined from the ledger on <code>[op, subject]</code> (that pairing is not unique and would let a record inherit an earlier approval). Rows appear only for registers this run actually committed. This store retains the approver on the assessment and rights-screening registers (it persists the approval-decorated <code>:payload</code>) but <strong>not</strong> on the production-release record, which <code>commit-record!</code> rebuilds from <code>entertainment.registry</code> and which therefore carries no approver at all. This table is derived from the live registers, so it flips on its own if that is changed.</p>
     <table>
       <thead><tr><th>Production</th><th>Register</th><th>Approver on record</th><th>Source</th></tr></thead>
       <tbody>
@@ -2531,12 +2531,15 @@ img,svg { max-width: 100%; height: auto; }</style></head><body>
     </table>
   </section>
   <section class="card">
-    <h2>Human approvals granted (audit trail) — 0</h2>
-    <p class="muted">Every approval this run granted, as recorded in the append-only ledger. This is the authoritative record of who approved what, independent of whether the SSoT register kept the approver.</p>
+    <h2>Human approvals granted (audit trail) — 4</h2>
+    <p class="muted">Every approval this run granted, taken from the actor graph's <code>:audit</code> channel. <strong>Measured gap:</strong> these facts are <em>not</em> persisted — <code>entertainment.operation</code> appends only commit and hold facts via <code>store/append-ledger!</code>, so the store's own ledger contains <span class="num">0</span> approval facts. Combined with the row above, the human who approved the production release is recoverable from neither the release record nor the persisted ledger; today it survives only in this run's in-memory audit channel.</p>
     <table>
       <thead><tr><th>Op</th><th>Production</th><th>Approved by</th></tr></thead>
       <tbody>
-
+        <tr><td><code>jurisdiction/assess</code></td><td><code>production-1</code></td><td>op-1</td></tr>
+        <tr><td><code>rights/screen</code></td><td><code>production-1</code></td><td>op-1</td></tr>
+        <tr><td><code>production/release</code></td><td><code>production-1</code></td><td>op-1</td></tr>
+        <tr><td><code>jurisdiction/assess</code></td><td><code>production-3</code></td><td>op-1</td></tr>
       </tbody>
     </table>
   </section>
@@ -2556,17 +2559,17 @@ img,svg { max-width: 100%; height: auto; }</style></head><body>
     <table>
       <thead><tr><th>Fact</th><th>Op</th><th>Production</th><th>Basis / reason</th></tr></thead>
       <tbody>
-        <tr><td>committed</td><td><code>intake</code></td><td><code>production-1</code></td><td>id, production-title</td></tr>
-        <tr><td>committed</td><td><code>assess</code></td><td><code>production-1</code></td><td>著作権法 (Copyright Act), https://www.bunka.go.jp/seisaku/chosakuken/</td></tr>
-        <tr><td>committed</td><td><code>screen</code></td><td><code>production-1</code></td><td>rights-check</td></tr>
-        <tr><td>committed</td><td><code>release</code></td><td><code>production-1</code></td><td>production-1</td></tr>
-        <tr><td>governor-hold</td><td><code>assess</code></td><td><code>production-2</code></td><td>no-spec-basis</td></tr>
-        <tr><td>governor-hold</td><td><code>release</code></td><td><code>production-2</code></td><td>evidence-incomplete</td></tr>
-        <tr><td>committed</td><td><code>assess</code></td><td><code>production-3</code></td><td>著作権法 (Copyright Act), https://www.bunka.go.jp/seisaku/chosakuken/</td></tr>
-        <tr><td>governor-hold</td><td><code>release</code></td><td><code>production-3</code></td><td>release-channel-restricted</td></tr>
-        <tr><td>governor-hold</td><td><code>screen</code></td><td><code>production-4</code></td><td>rights-clearance-unresolved</td></tr>
-        <tr><td>governor-hold</td><td><code>release</code></td><td><code>production-1</code></td><td>already-released</td></tr>
-        <tr><td>governor-hold</td><td><code>assess</code></td><td><code>production-1</code></td><td>phase gate: phase-disabled (phase 1)</td></tr>
+        <tr><td>committed</td><td><code>production/intake</code></td><td><code>production-1</code></td><td>id, production-title</td></tr>
+        <tr><td>committed</td><td><code>jurisdiction/assess</code></td><td><code>production-1</code></td><td>著作権法 (Copyright Act), https://www.bunka.go.jp/seisaku/chosakuken/</td></tr>
+        <tr><td>committed</td><td><code>rights/screen</code></td><td><code>production-1</code></td><td>rights-check</td></tr>
+        <tr><td>committed</td><td><code>production/release</code></td><td><code>production-1</code></td><td>production-1</td></tr>
+        <tr><td>governor-hold</td><td><code>jurisdiction/assess</code></td><td><code>production-2</code></td><td>no-spec-basis</td></tr>
+        <tr><td>governor-hold</td><td><code>production/release</code></td><td><code>production-2</code></td><td>evidence-incomplete</td></tr>
+        <tr><td>committed</td><td><code>jurisdiction/assess</code></td><td><code>production-3</code></td><td>著作権法 (Copyright Act), https://www.bunka.go.jp/seisaku/chosakuken/</td></tr>
+        <tr><td>governor-hold</td><td><code>production/release</code></td><td><code>production-3</code></td><td>release-channel-restricted</td></tr>
+        <tr><td>governor-hold</td><td><code>rights/screen</code></td><td><code>production-4</code></td><td>rights-clearance-unresolved</td></tr>
+        <tr><td>governor-hold</td><td><code>production/release</code></td><td><code>production-1</code></td><td>already-released</td></tr>
+        <tr><td>governor-hold</td><td><code>jurisdiction/assess</code></td><td><code>production-1</code></td><td>phase gate: phase-disabled (phase 1)</td></tr>
       </tbody>
     </table>
   </section>

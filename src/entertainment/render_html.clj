@@ -65,6 +65,20 @@
   (g/run* actor {:approval {:status :approved :by "op-1"}}
           {:thread-id tid :resume? true}))
 
+(defn- record-audit!
+  "Keeps the graph `:audit` channel of the LAST run per thread, in the
+  order threads were first seen. A resumed thread replays the whole
+  channel, so keeping only the last run avoids double-counting while
+  still capturing facts -- notably `:approval-granted` -- that
+  `entertainment.operation` never appends to the store's ledger."
+  [a tid result]
+  (let [entry [tid (vec (get-in result [:state :audit]))]]
+    (swap! a (fn [v]
+               (if-let [i (first (keep-indexed #(when (= tid (first %2)) %1) v))]
+                 (assoc v i entry)
+                 (conj v entry)))))
+  result)
+
 (defn run-demo!
   "Runs a fresh seeded store through a scenario mixing every disposition
   this actor can reach:
@@ -91,46 +105,52 @@
   with EMPTY violations -- the control case that proves the HARD-hold
   count on this page is not just counting `:governor-hold` facts.
 
-  Returns the store -- every field rendered below is real governor/store
-  output."
+  Returns `{:db store :audit [..]}` -- `:audit` is the graph's own audit
+  channel across all threads, which carries the `:approval-granted`
+  facts the store ledger does NOT (see the disclosure section). Every
+  field rendered below is real governor/store output."
   []
   (let [db (store/seed-db)
-        actor (op/build db)]
+        actor (op/build db)
+        trail (atom [])
+        ex! (fn [tid request context]
+              (record-audit! trail tid (exec! actor tid request context)))
+        ok! (fn [tid] (record-audit! trail tid (approve! actor tid)))]
     ;; -- production-1: the clean end-to-end lifecycle --
-    (exec! actor "p1-intake" {:op :production/intake :subject "production-1"
-                              :patch {:id "production-1"
-                                      :production-title "Cherry Blossom Requiem"}}
-           phase3-operator)
+    (ex! "p1-intake" {:op :production/intake :subject "production-1"
+                      :patch {:id "production-1"
+                              :production-title "Cherry Blossom Requiem"}}
+         phase3-operator)
 
-    (exec! actor "p1-assess" {:op :jurisdiction/assess :subject "production-1"} phase3-operator)
-    (approve! actor "p1-assess")
+    (ex! "p1-assess" {:op :jurisdiction/assess :subject "production-1"} phase3-operator)
+    (ok! "p1-assess")
 
-    (exec! actor "p1-screen" {:op :rights/screen :subject "production-1"} phase3-operator)
-    (approve! actor "p1-screen")
+    (ex! "p1-screen" {:op :rights/screen :subject "production-1"} phase3-operator)
+    (ok! "p1-screen")
 
-    (exec! actor "p1-release" {:op :production/release :subject "production-1"} phase3-operator)
-    (approve! actor "p1-release")
+    (ex! "p1-release" {:op :production/release :subject "production-1"} phase3-operator)
+    (ok! "p1-release")
 
     ;; -- production-2: no spec-basis, then no evidence on file --
-    (exec! actor "p2-assess" {:op :jurisdiction/assess :subject "production-2" :no-spec? true}
-           phase3-operator)
-    (exec! actor "p2-release" {:op :production/release :subject "production-2"} phase3-operator)
+    (ex! "p2-assess" {:op :jurisdiction/assess :subject "production-2" :no-spec? true}
+         phase3-operator)
+    (ex! "p2-release" {:op :production/release :subject "production-2"} phase3-operator)
 
     ;; -- production-3: assessed clean, but its own restricted channel blocks release --
-    (exec! actor "p3-assess" {:op :jurisdiction/assess :subject "production-3"} phase3-operator)
-    (approve! actor "p3-assess")
-    (exec! actor "p3-release" {:op :production/release :subject "production-3"} phase3-operator)
+    (ex! "p3-assess" {:op :jurisdiction/assess :subject "production-3"} phase3-operator)
+    (ok! "p3-assess")
+    (ex! "p3-release" {:op :production/release :subject "production-3"} phase3-operator)
 
     ;; -- production-4: the screening op HARD-holds on its own finding --
-    (exec! actor "p4-screen" {:op :rights/screen :subject "production-4"} phase3-operator)
+    (ex! "p4-screen" {:op :rights/screen :subject "production-4"} phase3-operator)
 
     ;; -- production-1 again: double release --
-    (exec! actor "p1-release-again" {:op :production/release :subject "production-1"} phase3-operator)
+    (ex! "p1-release-again" {:op :production/release :subject "production-1"} phase3-operator)
 
     ;; -- control: governor-clean request held purely by the rollout phase --
-    (exec! actor "p1-assess-phase1" {:op :jurisdiction/assess :subject "production-1"}
-           phase1-operator)
-    db))
+    (ex! "p1-assess-phase1" {:op :jurisdiction/assess :subject "production-1"}
+         phase1-operator)
+    {:db db :audit (vec (mapcat second @trail))}))
 
 ;; ----------------------------- ledger classification -----------------------------
 
@@ -190,7 +210,12 @@
       (str/replace "<" "&lt;")
       (str/replace ">" "&gt;")))
 
-(defn- kw-name [v] (if (keyword? v) (name v) (str v)))
+(defn- kw-name
+  "Keyword -> its printed name INCLUDING the namespace. `name` alone
+  would render `:production/release` and `:jurisdiction/assess` as
+  bare \"release\"/\"assess\", which loses the op's identity."
+  [v]
+  (if (keyword? v) (subs (str v) 1) (str v)))
 
 (defn- last-fact-for [ledger subject]
   (last (filter #(= (:subject %) subject) ledger)))
@@ -281,14 +306,19 @@
    "        <tr><td><code>:production/release</code></td><td><span class=\"warn\">ALWAYS human approval &middot; never auto at any phase &middot; evidence, restricted channels, rights clearance and double-release re-checked independently</span></td></tr>"])
 
 (defn render
-  "Renders the full operator-console.html document from a store `db`
-  that has already run `run-demo!` (or any other real scenario)."
-  [db]
+  "Renders the full operator-console.html document from the `{:db :audit}`
+  map `run-demo!` returns (or any other real scenario)."
+  [{:keys [db audit]}]
   (let [ledger (vec (store/ledger db))
         productions (store/all-productions db)
         hard (hard-holds ledger)
         phased (phase-holds ledger)
-        approvals (filterv #(= :approval-granted (:t %)) ledger)
+        ;; MEASURED: `:approval-granted` lives in the graph's audit
+        ;; channel only. `entertainment.operation` appends just the
+        ;; commit/hold facts to the store, so filtering the persisted
+        ;; ledger for approvals yields zero -- see the section note.
+        approvals (filterv #(= :approval-granted (:t %)) audit)
+        ledger-approvals (filterv #(= :approval-granted (:t %)) ledger)
         attribution (for [p productions
                           [label register] (registers-for db p)]
                       (attribution-row (:id p) label register))
@@ -352,7 +382,7 @@
 
      "  <section class=\"card\">\n"
      "    <h2>Approver attribution on committed registers</h2>\n"
-     "    <p class=\"muted\">Measured at render time by scanning each committed register for an approver key — not assumed, and not joined from the ledger on <code>[op, subject]</code> (that pairing is not unique and would let a record inherit an earlier approval). Rows appear only for registers this run actually committed. Where the store does not retain the approver, the approving human is still recoverable from the append-only ledger below, but is <em>not</em> on the record itself.</p>\n"
+     "    <p class=\"muted\">Measured at render time by scanning each committed register for an approver key — not assumed, and not joined from the ledger on <code>[op, subject]</code> (that pairing is not unique and would let a record inherit an earlier approval). Rows appear only for registers this run actually committed. This store retains the approver on the assessment and rights-screening registers (it persists the approval-decorated <code>:payload</code>) but <strong>not</strong> on the production-release record, which <code>commit-record!</code> rebuilds from <code>entertainment.registry</code> and which therefore carries no approver at all. This table is derived from the live registers, so it flips on its own if that is changed.</p>\n"
      "    <table>\n"
      "      <thead><tr><th>Production</th><th>Register</th><th>Approver on record</th><th>Source</th></tr></thead>\n"
      "      <tbody>\n"
@@ -363,7 +393,7 @@
 
      "  <section class=\"card\">\n"
      "    <h2>Human approvals granted (audit trail) — " (count approvals) "</h2>\n"
-     "    <p class=\"muted\">Every approval this run granted, as recorded in the append-only ledger. This is the authoritative record of who approved what, independent of whether the SSoT register kept the approver.</p>\n"
+     "    <p class=\"muted\">Every approval this run granted, taken from the actor graph's <code>:audit</code> channel. <strong>Measured gap:</strong> these facts are <em>not</em> persisted — <code>entertainment.operation</code> appends only commit and hold facts via <code>store/append-ledger!</code>, so the store's own ledger contains <span class=\"num\">" (count ledger-approvals) "</span> approval facts. Combined with the row above, the human who approved the production release is recoverable from neither the release record nor the persisted ledger; today it survives only in this run's in-memory audit channel.</p>\n"
      "    <table>\n"
      "      <thead><tr><th>Op</th><th>Production</th><th>Approved by</th></tr></thead>\n"
      "      <tbody>\n"
@@ -407,7 +437,7 @@
 
 (defn -main [& args]
   (let [out (or (first args) "docs/samples/operator-console.html")
-        db (run-demo!)
+        {:keys [db] :as result} (run-demo!)
         ledger (vec (store/ledger db))
         hard (hard-holds ledger)
         phased (phase-holds ledger)]
@@ -423,7 +453,7 @@
                        :hard-holds 0
                        :phase-holds (count phased)})))
     (io/make-parents out)
-    (spit out (render db))
+    (spit out (render result))
     (println "wrote" out
              (str "(" (count ledger) " ledger facts, "
                   (count hard) " HARD governor holds "
