@@ -27,7 +27,7 @@
   a venue/company would keep, not the act of releasing the production
   itself (that is `entertainment.operation`'s `:production/release`,
   always human-gated -- see README `Actuation`)."
-  (:require [clojure.string :as str]))
+  (:require [kotoba.lang.text :as str]))
 
 (defn- unsigned-certificate
   "Every certificate this actor produces is UNSIGNED -- signature is the
@@ -72,7 +72,7 @@
     (throw (ex-info "production-release: jurisdiction required" {})))
   (when (< sequence 0)
     (throw (ex-info "production-release: sequence must be >= 0" {})))
-  (let [release-number (str (str/upper-case jurisdiction) "-REL-" (zero-pad sequence 6))
+  (let [release-number (str (str/upper jurisdiction) "-REL-" (zero-pad sequence 6))
         record {"record_id" release-number
                 "kind" "production-release-draft"
                 "production_id" production-id
