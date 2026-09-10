@@ -167,14 +167,14 @@ reference at all.
 
 | File | Role |
 |---|---|
-| `src/entertainment/store.cljc` | **Store** protocol -- `MemStore` ‖ `DatomicStore` (`langchain.db`) + append-only audit ledger + production-release history. No dynamically-filed sub-record -- the actuation op acts directly on a pre-seeded production, and the double-release guard checks a dedicated `:released?` boolean rather than a `:status` value |
-| `src/entertainment/registry.cljc` | Production-release draft records, plus `release-channel-restricted?` -- reuses `clinic.registry/treatment-contraindicated?`'s set-membership/conflict shape (previously reused verbatim once by `veterinary.registry`) for a THIRD domain |
-| `src/entertainment/facts.cljc` | Per-jurisdiction copyright/rights-clearance catalog with an official spec-basis citation per entry, honest coverage reporting |
-| `src/entertainment/entertainmentopsllm.cljc` | **EntertainmentOps-LLM Advisor** -- `mock-advisor` ‖ `llm-advisor`; intake/assessment/rights-screening/production-release proposals |
-| `src/entertainment/governor.cljc` | **Content and Booking Governor** -- 4 HARD checks (spec-basis · evidence-incomplete · release-channel-restricted, pure ground-truth set-membership recompute · rights-clearance-unresolved, unconditional evaluation, the FOURTEENTH grounding of this discipline) + already-released guard + 1 soft (confidence/actuation gate) |
-| `src/entertainment/phase.cljc` | **Phase 0→3** -- read-only → assisted intake → assisted assess → supervised (release always human; production intake is the ONLY auto-eligible op, no direct capital risk) |
-| `src/entertainment/operation.cljc` | **OperationActor** -- langgraph-clj StateGraph |
-| `src/entertainment/sim.cljc` | demo driver |
+| `src/entertainment/store.kotoba` | **Store** protocol -- `MemStore` ‖ `DatomicStore` (`langchain.db`) + append-only audit ledger + production-release history. No dynamically-filed sub-record -- the actuation op acts directly on a pre-seeded production, and the double-release guard checks a dedicated `:released?` boolean rather than a `:status` value |
+| `src/entertainment/registry.kotoba` | Production-release draft records, plus `release-channel-restricted?` -- reuses `clinic.registry/treatment-contraindicated?`'s set-membership/conflict shape (previously reused verbatim once by `veterinary.registry`) for a THIRD domain |
+| `src/entertainment/facts.kotoba` | Per-jurisdiction copyright/rights-clearance catalog with an official spec-basis citation per entry, honest coverage reporting |
+| `src/entertainment/entertainmentopsllm.kotoba` | **EntertainmentOps-LLM Advisor** -- `mock-advisor` ‖ `llm-advisor`; intake/assessment/rights-screening/production-release proposals |
+| `src/entertainment/governor.kotoba` | **Content and Booking Governor** -- 4 HARD checks (spec-basis · evidence-incomplete · release-channel-restricted, pure ground-truth set-membership recompute · rights-clearance-unresolved, unconditional evaluation, the FOURTEENTH grounding of this discipline) + already-released guard + 1 soft (confidence/actuation gate) |
+| `src/entertainment/phase.kotoba` | **Phase 0→3** -- read-only → assisted intake → assisted assess → supervised (release always human; production intake is the ONLY auto-eligible op, no direct capital risk) |
+| `src/entertainment/operation.kotoba` | **OperationActor** -- langgraph-clj StateGraph |
+| `src/entertainment/sim.kotoba` | demo driver |
 | `test/entertainment/*_test.clj` | governor contract · phase invariants · store parity · registry conformance · facts coverage |
 
 ## Business-process coverage (honest)

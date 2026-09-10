@@ -142,7 +142,7 @@ the blueprint's own explicit statement.
   family, extending it from clinical-safety concerns to contractual
   release-channel conflicts.
 - (+) The actuation invariant (governor + phase, two layers) is
-  regression-tested by `test/entertainment/phase_test.clj`'s
+  regression-tested by `test/entertainment/phase_test.kotoba`'s
   `production-release-never-auto-at-any-phase`.
 - (+) `MemStore` ‖ `DatomicStore` parity is proven by `test/
   entertainment/store_contract_test.clj`, the same `:db-api`-driven
