@@ -17,11 +17,11 @@
   ;; io.github.com-junkawasaki/langchain-clj. langgraph declares the same
   ;; library as io.github.kotoba-lang/langchain, so the entry matched no
   ;; node in the resolved tree and never reached the classpath -- verified
-  ;; with `clojure -Stree`/-Spath, unchanged before and after removal.
+  ;; with `kbb -Stree`/-Spath, unchanged before and after removal.
   :dev {}
-  ;; clojure -M:dev:run  -> drive the demo through one OperationActor
+  ;; kbb -M:dev:run  -> drive the demo through one OperationActor
   :run {:main-opts ["-m" "entertainment.sim"]}
-  ;; clojure -M:render-html [out-file] -> regenerate docs/samples/operator-console.html
+  ;; kbb -M:render-html [out-file] -> regenerate docs/samples/operator-console.html
   ;; by driving the REAL actor (flagship checklist item 2). jp-go-dds is an
   ;; alias-scoped extra dep on purpose: the design system is only needed to
   ;; render the page, so :test / :lint keep their existing dependency surface.
