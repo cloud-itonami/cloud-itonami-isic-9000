@@ -1,5 +1,5 @@
 (ns entertainment.sim
-  "Demo driver -- `clojure -M:dev:run`. Walks a clean production
+  "Demo driver -- `kbb -M:dev:run`. Walks a clean production
   through intake -> jurisdiction assessment -> rights screening ->
   production-release proposal (always escalates) -> human approval ->
   commit, then shows four HARD holds (a jurisdiction with no spec-

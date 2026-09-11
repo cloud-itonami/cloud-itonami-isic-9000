@@ -5,7 +5,7 @@
   page and no generator at all. This namespace drives the REAL actor
   stack (`entertainment.operation` -> `entertainment.governor` ->
   `entertainment.store`) through a scenario adapted from this repo's
-  own `entertainment.sim` demo driver (`clojure -M:dev:run`, confirmed
+  own `entertainment.sim` demo driver (`kbb -M:dev:run`, confirmed
   BEFORE writing this file to produce a sensible ledger against the
   real seeded production ids `production-1`..`production-4` from
   `entertainment.store/demo-data`), and renders the result
@@ -39,7 +39,7 @@
   never by joining ledger approvals on `[op subject]`, which is not
   unique and would let a record inherit an earlier approval.
 
-  Usage: `clojure -M:render-html [out-file]`
+  Usage: `kbb -M:render-html [out-file]`
   (default `docs/samples/operator-console.html`)."
   (:require [clojure.java.io :as io]
             [kotoba.lang.text :as str]
@@ -338,7 +338,7 @@
 
      "  <section class=\"card\">\n"
      "    <h2>Productions</h2>\n"
-     "    <p class=\"muted\">Demo snapshot — build-time-generated from <code>entertainment.store</code> via <code>entertainment.render-html</code> (<code>clojure -M:render-html</code>). Every id, channel and verdict below is the real actor's output against the seeded production set; nothing on this page is hand-typed.</p>\n"
+     "    <p class=\"muted\">Demo snapshot — build-time-generated from <code>entertainment.store</code> via <code>entertainment.render-html</code> (<code>kbb -M:render-html</code>). Every id, channel and verdict below is the real actor's output against the seeded production set; nothing on this page is hand-typed.</p>\n"
      "    <table>\n"
      "      <thead><tr><th>Production</th><th>Title</th><th>Jurisdiction</th><th>Proposed channel</th><th>Restricted channels</th><th>Rights clearance</th><th>Release</th><th>Last op status</th></tr></thead>\n"
      "      <tbody>\n"
