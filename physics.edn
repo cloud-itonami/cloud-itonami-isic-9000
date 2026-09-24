@@ -1,0 +1,42 @@
+;; What this vertical's robot physically does, declared for
+;; kotoba.robotics.process (kotoba-lang/robotics). `kbb -M:dev:physics` runs it.
+;;
+;; README "Robotics premise": a stage/rigging robot assists physical set and
+;; equipment handling in creative, arts and entertainment activities
+;; (ISIC 9000). Its physical work: hanging stage lights on the lighting bar,
+;; proof-checking the steel hanger rods that carry a flown bar, and pushing
+;; scenery wagons on and off stage during a scene change.
+;;
+;; Every number without a cited source is marked `estimate` in its :basis.
+;; Replacing an estimate with a sourced value is this bot's growth work.
+{:physics/schema "itonami.physical-ai.spec.v1"
+ :repo "cloud-itonami/cloud-itonami-isic-9000"
+ :cases
+ [{:id :hang-moving-light
+   :kind :manipulator
+   :procedure "arm lifts a moving-head light from the flight case and offers it up to the clamp on the lowered lighting bar"
+   :params {:l1-m 0.60 :l2-m 0.50 :m1-kg 8.0 :m2-kg 5.0
+            :from [0.60 0.10] :to [0.35 0.95] :duration-s 4.0 :steps 500}
+   :sweep {:param :payload-kg :values [10.0 15.0 20.0 25.0 35.0]}
+   :quantity :peak-tau1-nm
+   :limit {:max 250.0 :basis "estimate: continuous shoulder torque of a 25 kg-payload-class industrial arm"}
+   :boundary {:lo 2.0 :hi 80.0}}
+  {:id :bar-hanger-rod-proof
+   :kind :material
+   :procedure "tensile proof of the S235 steel hanger rod that carries one pick point of a flown lighting bar"
+   :params {:length-m 0.30 :youngs-modulus-pa 210.0e9 :yield-stress-pa 235.0e6
+            :hardening-pa 1.0e9 :density-kg-m3 7850.0 :max-force-n 40000.0}
+   :sweep {:param :area-m2 :values [5.0e-5 7.0e-5 9.0e-5 1.13e-4 1.5e-4]}
+   :quantity :yield-force-n
+   :limit {:min 20000.0 :basis "estimate: 250 kg per pick point x ~8 design factor for overhead suspension of stage equipment (factor to be pinned to the rigging code in force)"}
+   :boundary {:lo 3.0e-5 :hi 1.6e-4}}
+  {:id :scenery-wagon-change
+   :kind :transport
+   :procedure "robot pushes a scenery wagon 12 m from the wings to its spike marks during a scene change"
+   :params {:mass-kg 80.0 :distance-m 12.0 :v-max-mps 1.0 :a-max-mps2 0.5
+            :brake-decel-mps2 0.8 :drive-force-n 400.0 :crr 0.02
+            :cog-height-m 0.40 :support-half-length-m 1.20 :max-time-s 2000.0}
+   :sweep {:param :payload-kg :values [200.0 400.0 600.0 800.0 1000.0]}
+   :quantity :cycle-time-s
+   :limit {:max 20.0 :basis "estimate: wagon on its marks inside a 20-second scene-change cue"}
+   :boundary {:lo 50.0 :hi 3000.0}}]}
